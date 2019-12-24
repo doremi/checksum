@@ -16,7 +16,7 @@ uint32_t checksum_32(const char *filename) {
 
     struct stat st;
     fstat(fd, &st);
-    off_t len = st.st_size;
+    const off_t len = st.st_size;
     uint8_t *file_ptr = (uint8_t*)mmap(NULL, len, PROT_READ, MAP_SHARED, fd, 0);
     if (file_ptr == MAP_FAILED) {
         perror("mmap");
@@ -25,11 +25,12 @@ uint32_t checksum_32(const char *filename) {
     }
 
     uint32_t sum = 0;
-    while (len > 0) {
-        sum += *file_ptr++;
-        --len;
+    for (off_t i = 0; i < len; ++i) {
+        sum += file_ptr[i];
     }
-    munmap(file_ptr, len);
+    if (munmap(file_ptr, len) == -1) {
+        perror("munmap");
+    }
     close(fd);
 
     return sum;
